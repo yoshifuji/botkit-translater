@@ -24,7 +24,7 @@ var controller = Botkit.slackbot({
     debug: true,
 });
 
-//var vcapServices = JSON.parse(process.env.VCAP_SERVICES);
+var vcapServices = JSON.parse(process.env.VCAP_SERVICES);
 var language_translator = new LanguageTranslatorV2({
     username: vcapServices.language_translator[0].credentials.username,
     password: vcapServices.language_translator[0].credentials.password,
