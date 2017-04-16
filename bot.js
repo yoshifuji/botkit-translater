@@ -16,17 +16,57 @@ if (!process.env.token) {
 }
 
 var Botkit = require('botkit');
+var LanguageTranslatorV2 = require('watson-developer-cloud/language-translator/v2');
+var request = require('request');
 var os = require('os');
 
 var controller = Botkit.slackbot({
     debug: true,
 });
 
+//var vcapServices = JSON.parse(process.env.VCAP_SERVICES);
+var language_translator = new LanguageTranslatorV2({
+    username: vcapServices.language_translator[0].credentials.username,
+    password: vcapServices.language_translator[0].credentials.password,
+    url: 'https://gateway.watsonplatform.net/language-translator/api/'
+});
+
 var bot = controller.spawn({
     token: process.env.token
 }).startRTM();
 
+//=========================================================
+// WatsonAPI
+//=========================================================
 
+controller.hears(["^Hello","^hi$"],["direct_message","direct_mention","mention","ambient"],function(bot,message) {
+    bot.reply(message,'Hello!');
+});
+
+//controller.hears(["^translate*","^Translate*"],["direct_message","direct_mention","mention","ambient"],function(bot,message) {
+controller.hears(['(.*)'], 'ambient', function(bot,message) {
+    //var matches  = message.text.match(/^[tT]ranslate (.*)/i);
+    //var sentence = matches[1];
+    //var matches  = message.text.match(/(.*)/i);
+    var sentence = message.text;
+
+        console.log('sentence:', sentence);
+
+        //ToDo: recognize lang type
+
+        //translation part
+        language_translator.translate({
+            text: sentence, source : 'ja', target: 'en' },
+        function (err, translation) {
+            if (err)
+                console.log('error:', err);
+            else{
+                console.log(JSON.stringify(translation, null, 2));
+                var translated = "In English: "+ translation['translations'][0]['translation'];
+                bot.reply(message, translated);
+            }
+        });
+});
 
 //=========================================================
 // 基本的な受け答え
@@ -50,8 +90,6 @@ controller.hears(['挨拶', 'こんにちは', 'Bot', 'あなた', '誰', 'だ�
     bot.reply(message, 'こんにちは！私は *Botkit製のBot* です！ \n _いろんな事ができますよ！_ :smiley:');
 
 });
-
-
 
 //=========================================================
 // 質問形式の会話
@@ -100,8 +138,6 @@ controller.hears(['ラーメン'], 'direct_message,direct_mention,mention', func
 
 });
 
-
-
 //=========================================================
 // 絵文字リアクション
 //=========================================================
@@ -122,8 +158,6 @@ controller.hears(['ハイタッチ'], 'direct_message,direct_mention,mention,amb
     });
 
 });
-
-
 
 //=========================================================
 // 名前を覚える(データを保存する)
@@ -147,7 +181,6 @@ controller.hears(['ハイタッチ'], 'direct_message,direct_mention,mention,amb
 //    controller.storage.users.***
 //    controller.storage.channels.***
 //    controller.storage.teams.***
-
 
 controller.hears(['(.*)って呼んで'], 'direct_message,direct_mention,mention', function (bot, message) {
 
@@ -194,8 +227,6 @@ controller.hears(['(.*)って呼んで'], 'direct_message,direct_mention,mention
 
 });
 
-
-
 //=========================================================
 // どれにも当てはまらなかった場合の返答
 //=========================================================
@@ -225,3 +256,13 @@ controller.hears(['(.*)'], 'direct_message,direct_mention,mention', function (bo
         }
     });
 });
+
+/*
+controller.hears(['(.*)'], 'ambient', function (bot, message) {
+
+    var name_from_msg = message.match[1];
+
+    bot.reply(message, name_from_msg + ' いいですよね:grin:');
+
+});
+*/

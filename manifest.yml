@@ -1,0 +1,9 @@
+applications:
+- name: botkit-translator
+  command: node ./bot.js
+  path: .
+  domain: mybluemix.net
+  host: botkit-translator
+  random-route: true
+  memory: 128M
+  instances: 1
